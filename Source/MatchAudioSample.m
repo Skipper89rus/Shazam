@@ -1,4 +1,4 @@
-%Проверка на совпадение двух образцов
+%РџСЂРѕРІРµСЂРєР° РЅР° СЃРѕРІРїР°РґРµРЅРёРµ РґРІСѓС… РѕР±СЂР°Р·С†РѕРІ
 
 function [bestMatchId, confidence] = MatchAudioSample(sample, sampleRate)
 

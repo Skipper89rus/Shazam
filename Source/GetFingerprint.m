@@ -1,27 +1,27 @@
-%Создание кортежей
+%РЎРѕР·РґР°РЅРёРµ РєРѕСЂС‚РµР¶РµР№
 
 function tuples = GetFingerprint(audioData, sampleRate, needVisualise)		
 
-meanChannels = mean(audioData, 2);		%Получаем среднее значение по стереоканалам
+meanChannels = mean(audioData, 2);		%РџРѕР»СѓС‡Р°РµРј СЃСЂРµРґРЅРµРµ Р·РЅР°С‡РµРЅРёРµ РїРѕ СЃС‚РµСЂРµРѕРєР°РЅР°Р»Р°Рј
 %newSampleRate = 8000;
 %resampledData = resample(meanChannels, sampleRate, newSampleRate);
 
 data = meanChannels;
 dataLength = length(data);
 wndSize = 2048; %floor(dataLength / 4.5);
-wnd = hamming(wndSize);		%Возвращает n-точечное симметричное окно Хэмминга в виде вектора-столбца wnd
+wnd = hamming(wndSize);		%Р’РѕР·РІСЂР°С‰Р°РµС‚ n-С‚РѕС‡РµС‡РЅРѕРµ СЃРёРјРјРµС‚СЂРёС‡РЅРѕРµ РѕРєРЅРѕ РҐСЌРјРјРёРЅРіР° РІ РІРёРґРµ РІРµРєС‚РѕСЂР°-СЃС‚РѕР»Р±С†Р° wnd
 overlap = wndSize / 2;
-fftSize = max(256, 2 ^ nextpow2(wndSize));		%Создаеи матрицу, возвращающую наибольшие значения между 2мя значениями 
+fftSize = max(256, 2 ^ nextpow2(wndSize));		%РЎРѕР·РґР°РµРё РјР°С‚СЂРёС†Сѓ, РІРѕР·РІСЂР°С‰Р°СЋС‰СѓСЋ РЅР°РёР±РѕР»СЊС€РёРµ Р·РЅР°С‡РµРЅРёСЏ РјРµР¶РґСѓ 2РјСЏ Р·РЅР°С‡РµРЅРёСЏРјРё 
 
-[S, freq, time, power] = spectrogram(data, wnd, overlap, fftSize, sampleRate);		%Получаем спектограмму,
-%	где S – спектрограмма в виде матрицы,	freq – вектор частот в герцах для оси ординат, 
-%	time – вектор временных отсчетов для оси абсцисс,
-%	power – матрица спектральной плотности мощности (PSD).
+[S, freq, time, power] = spectrogram(data, wnd, overlap, fftSize, sampleRate);		%РџРѕР»СѓС‡Р°РµРј СЃРїРµРєС‚РѕРіСЂР°РјРјСѓ,
+%	РіРґРµ S вЂ“ СЃРїРµРєС‚СЂРѕРіСЂР°РјРјР° РІ РІРёРґРµ РјР°С‚СЂРёС†С‹,	freq вЂ“ РІРµРєС‚РѕСЂ С‡Р°СЃС‚РѕС‚ РІ РіРµСЂС†Р°С… РґР»СЏ РѕСЃРё РѕСЂРґРёРЅР°С‚, 
+%	time вЂ“ РІРµРєС‚РѕСЂ РІСЂРµРјРµРЅРЅС‹С… РѕС‚СЃС‡РµС‚РѕРІ РґР»СЏ РѕСЃРё Р°Р±СЃС†РёСЃСЃ,
+%	power вЂ“ РјР°С‚СЂРёС†Р° СЃРїРµРєС‚СЂР°Р»СЊРЅРѕР№ РїР»РѕС‚РЅРѕСЃС‚Рё РјРѕС‰РЅРѕСЃС‚Рё (PSD).
 
-logPower = 10 * log10(power);	%преобразуем спектральную мощность в децибелы 
-kHzFreq = freq / 1000;		%выводим частоту в килогерцах
+logPower = 10 * log10(power);	%РїСЂРµРѕР±СЂР°Р·СѓРµРј СЃРїРµРєС‚СЂР°Р»СЊРЅСѓСЋ РјРѕС‰РЅРѕСЃС‚СЊ РІ РґРµС†РёР±РµР»С‹ 
+kHzFreq = freq / 1000;		%РІС‹РІРѕРґРёРј С‡Р°СЃС‚РѕС‚Сѓ РІ РєРёР»РѕРіРµСЂС†Р°С…
 
-if (needVisualise)		%выводим спектограмму на экран
+if (needVisualise)		%РІС‹РІРѕРґРёРј СЃРїРµРєС‚РѕРіСЂР°РјРјСѓ РЅР° СЌРєСЂР°РЅ
     surf(time, kHzFreq, logPower, 'edgecolor', 'none');
     axis tight;
     xlabel('Time (seconds)');
@@ -30,24 +30,24 @@ if (needVisualise)		%выводим спектограмму на экран
 end
 
 shiftRectHalfSize = 4;
-[peaks, freqIds, timeIds] = GetPeaks(power, shiftRectHalfSize);		%Используем функцию для нахождения пиков композиции
+[peaks, freqIds, timeIds] = GetPeaks(power, shiftRectHalfSize);		%РСЃРїРѕР»СЊР·СѓРµРј С„СѓРЅРєС†РёСЋ РґР»СЏ РЅР°С…РѕР¶РґРµРЅРёСЏ РїРёРєРѕРІ РєРѕРјРїРѕР·РёС†РёРё
 
 P = power(sub2ind(size(power), freqIds, timeIds));
 T = time(timeIds);
 F = kHzFreq(freqIds);
 
-if (needVisualise)		%Выводим пики
+if (needVisualise)		%Р’С‹РІРѕРґРёРј РїРёРєРё
     hold on
     scatter3(T, F, P, '*r');
     hold off
 end
 
-deltaTime = 35; % bound on time difference (in pixels)	/	Связь с разницей во времени (в пикселях)
-deltaFreq = 30; % bound on frequency difference (in pixels)	/	Связь с разницей в частоте (в пикселях)
-fanout = 3; % Maximum number of pairs per peak.	/	Максимальное число пар на один пик
-tuples = GetTuples(power .* peaks, fanout, deltaTime, deltaFreq);		%Используем функцию для полуения кортежа
+deltaTime = 35; % bound on time difference (in pixels)	/	РЎРІСЏР·СЊ СЃ СЂР°Р·РЅРёС†РµР№ РІРѕ РІСЂРµРјРµРЅРё (РІ РїРёРєСЃРµР»СЏС…)
+deltaFreq = 30; % bound on frequency difference (in pixels)	/	РЎРІСЏР·СЊ СЃ СЂР°Р·РЅРёС†РµР№ РІ С‡Р°СЃС‚РѕС‚Рµ (РІ РїРёРєСЃРµР»СЏС…)
+fanout = 3; % Maximum number of pairs per peak.	/	РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ С‡РёСЃР»Рѕ РїР°СЂ РЅР° РѕРґРёРЅ РїРёРє
+tuples = GetTuples(power .* peaks, fanout, deltaTime, deltaFreq);		%РСЃРїРѕР»СЊР·СѓРµРј С„СѓРЅРєС†РёСЋ РґР»СЏ РїРѕР»СѓРµРЅРёСЏ РєРѕСЂС‚РµР¶Р°
 
-if (needVisualise)		%Выводим кортеж
+if (needVisualise)		%Р’С‹РІРѕРґРёРј РєРѕСЂС‚РµР¶
     hold on
     for i = 1:size(tuples,1)
         line([time(tuples(i,1)), time(tuples(i,2))], [kHzFreq(tuples(i,3)), kHzFreq(tuples(i,4))])

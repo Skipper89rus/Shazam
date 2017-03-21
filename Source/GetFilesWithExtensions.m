@@ -1,35 +1,35 @@
-%Найти файлы с расширением из списка extensionsToFind в папке dirPath
+%РќР°Р№С‚Рё С„Р°Р№Р»С‹ СЃ СЂР°СЃС€РёСЂРµРЅРёРµРј РёР· СЃРїРёСЃРєР° extensionsToFind РІ РїР°РїРєРµ dirPath
 
 function files = GetFilesWithExtensions(dirPath, extToFind)
 
-if isempty(dirPath)    			%Проверка на тот случай, если папка пуста
+if isempty(dirPath)    			%РџСЂРѕРІРµСЂРєР° РЅР° С‚РѕС‚ СЃР»СѓС‡Р°Р№, РµСЃР»Рё РїР°РїРєР° РїСѓСЃС‚Р°
     disp 'Directory path is empty';
     return
 end
 
-if ~iscellstr(extToFind)		%Проверяем, является ли это массивом ячеек для строк
+if ~iscellstr(extToFind)		%РџСЂРѕРІРµСЂСЏРµРј, СЏРІР»СЏРµС‚СЃСЏ Р»Рё СЌС‚Рѕ РјР°СЃСЃРёРІРѕРј СЏС‡РµРµРє РґР»СЏ СЃС‚СЂРѕРє
     disp 'Extensions to find must be a cell strings';
     return
 end
 
-listing = dir(dirPath);			%Выводим содержимое в указанной папке
-filesNum = size(listing, 1);	%Получаем длину размерности содержимого папки, dim =1
-filesNames = cell([filesNum, 1]);	%Создаем массив ячеек
+listing = dir(dirPath);			%Р’С‹РІРѕРґРёРј СЃРѕРґРµСЂР¶РёРјРѕРµ РІ СѓРєР°Р·Р°РЅРЅРѕР№ РїР°РїРєРµ
+filesNum = size(listing, 1);	%РџРѕР»СѓС‡Р°РµРј РґР»РёРЅСѓ СЂР°Р·РјРµСЂРЅРѕСЃС‚Рё СЃРѕРґРµСЂР¶РёРјРѕРіРѕ РїР°РїРєРё, dim =1
+filesNames = cell([filesNum, 1]);	%РЎРѕР·РґР°РµРј РјР°СЃСЃРёРІ СЏС‡РµРµРє
 for i = 1 : filesNum
-    filesNames{i} = listing(i).name;	%Помещаем в созданный массив наименование файлов
+    filesNames{i} = listing(i).name;	%РџРѕРјРµС‰Р°РµРј РІ СЃРѕР·РґР°РЅРЅС‹Р№ РјР°СЃСЃРёРІ РЅР°РёРјРµРЅРѕРІР°РЅРёРµ С„Р°Р№Р»РѕРІ
 end
 
-files = cell([filesNum, 1]);	%Создаем еще один массив ячеек
+files = cell([filesNum, 1]);	%РЎРѕР·РґР°РµРј РµС‰Рµ РѕРґРёРЅ РјР°СЃСЃРёРІ СЏС‡РµРµРє
 counter = 1;
 for fileIdx = 1 : filesNum		
-    if isAudioFile(filesNames{fileIdx}, extToFind)	%Ищем аудиофайлы 
-       files{counter} = fullfile(dirPath, filesNames{fileIdx}); 	%В ново-созданный массив ячеек загружаем полное имя файла
+    if isAudioFile(filesNames{fileIdx}, extToFind)	%РС‰РµРј Р°СѓРґРёРѕС„Р°Р№Р»С‹ 
+       files{counter} = fullfile(dirPath, filesNames{fileIdx}); 	%Р’ РЅРѕРІРѕ-СЃРѕР·РґР°РЅРЅС‹Р№ РјР°СЃСЃРёРІ СЏС‡РµРµРє Р·Р°РіСЂСѓР¶Р°РµРј РїРѕР»РЅРѕРµ РёРјСЏ С„Р°Р№Р»Р°
        counter = counter + 1;
     end
 end
 
 if counter == 1	
-    disp 'Files not found'; 	%Аудиофайлы не найдены
+    disp 'Files not found'; 	%РђСѓРґРёРѕС„Р°Р№Р»С‹ РЅРµ РЅР°Р№РґРµРЅС‹
 end
 
 % Reduce list to correct length

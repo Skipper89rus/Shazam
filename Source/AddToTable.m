@@ -1,21 +1,21 @@
-%Подготовка базы данных
+%РџРѕРґРіРѕС‚РѕРІРєР° Р±Р°Р·С‹ РґР°РЅРЅС‹С…
 
 function maxCollisions = AddToTable(tuples, songIdx)
 
-global GHashTable;	%Глобальная переменная, в которую будут добавляться композиции
+global GHashTable;	%Р“Р»РѕР±Р°Р»СЊРЅР°СЏ РїРµСЂРµРјРµРЅРЅР°СЏ, РІ РєРѕС‚РѕСЂСѓСЋ Р±СѓРґСѓС‚ РґРѕР±Р°РІР»СЏС‚СЊСЃСЏ РєРѕРјРїРѕР·РёС†РёРё
 
 hashTableSize = size(GHashTable, 1);
 
-% Count the max number of collisions for a given hash (FYI)	/	Считаем максимальное число противоречий (столкновений) для заданного хеша
+% Count the max number of collisions for a given hash (FYI)	/	РЎС‡РёС‚Р°РµРј РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ С‡РёСЃР»Рѕ РїСЂРѕС‚РёРІРѕСЂРµС‡РёР№ (СЃС‚РѕР»РєРЅРѕРІРµРЅРёР№) РґР»СЏ Р·Р°РґР°РЅРЅРѕРіРѕ С…РµС€Р°
 maxCollisions = 0;
         
 for tupleIdx = 1 : size(tuples, 1);
-    hash = GetHash(tuples(tupleIdx, 3), tuples(tupleIdx, 4), tuples(tupleIdx, 2) - tuples(tupleIdx, 1), hashTableSize);	%Используем функцию для полуения хеша
-    %  first instance of this hash	/	первый экземпляр этой хеш-функции
+    hash = GetHash(tuples(tupleIdx, 3), tuples(tupleIdx, 4), tuples(tupleIdx, 2) - tuples(tupleIdx, 1), hashTableSize);	%РСЃРїРѕР»СЊР·СѓРµРј С„СѓРЅРєС†РёСЋ РґР»СЏ РїРѕР»СѓРµРЅРёСЏ С…РµС€Р°
+    %  first instance of this hash	/	РїРµСЂРІС‹Р№ СЌРєР·РµРјРїР»СЏСЂ СЌС‚РѕР№ С…РµС€-С„СѓРЅРєС†РёРё
     if isempty(GHashTable{hash, 1})
         GHashTable{hash, 1} = songIdx; % # id of the song
         GHashTable{hash, 2} = tuples(tupleIdx, 1); 
-    % duplicate instance of this hash	/	дубликат экземпляра этой хеш-функции
+    % duplicate instance of this hash	/	РґСѓР±Р»РёРєР°С‚ СЌРєР·РµРјРїР»СЏСЂР° СЌС‚РѕР№ С…РµС€-С„СѓРЅРєС†РёРё
     else
         GHashTable{hash, 1} = [GHashTable{hash, 1}, songIdx];
         GHashTable{hash, 2} = [GHashTable{hash, 2}, tuples(tupleIdx, 1)];
