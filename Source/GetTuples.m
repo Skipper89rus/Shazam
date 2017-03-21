@@ -1,3 +1,5 @@
+%Функция для полуения кортежа
+
 function tuples = GetTuples(peaks, fanout, deltaTime, deltaFreq)
 
 % Можно брать конкретные индексы, а не итерироваться по всей карте peaks
