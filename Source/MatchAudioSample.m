@@ -1,3 +1,5 @@
+%Проверка на совпадение двух образцов
+
 function [bestMatchId, confidence] = MatchAudioSample(sample, sampleRate)
 
 global GHashTable

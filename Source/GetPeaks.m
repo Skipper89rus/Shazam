@@ -1,3 +1,5 @@
+%Функция для нахождения пиков композиции
+
 function [peaks, freqIds, timeIds] = GetPeaks(power, shiftMaxStep)
 % time    = [0 1 2 3 4 5 6 7 8];
 % kHzFreq = [0 1 2 3 4 5 6 7];
