@@ -1,6 +1,5 @@
-%Функция для нахождения пиков композиции
-
-function [peaks, freqIds, timeIds] = GetPeaks(power, shiftMaxStep)
+% Функция для нахождения пиков композиции
+function [peaks, freqIds, timeIds] = GetPeaks(power, shiftMaxStepT, shiftMaxStepF)
 % time    = [0 1 2 3 4 5 6 7 8];
 % kHzFreq = [0 1 2 3 4 5 6 7];
 % power   = [0 0 0 0 0 0 0 0 0;
@@ -21,8 +20,7 @@ function [peaks, freqIds, timeIds] = GetPeaks(power, shiftMaxStep)
 % ViewMatrix(power);
 
 peaks = true(size(power, 1), size(power, 2));
-for i = -shiftMaxStep : shiftMaxStep
-    for j = -shiftMaxStep : shiftMaxStep
+    for j = -shiftMaxStepF : shiftMaxStepF
         if (i == 0 && j == 0)
             continue
         end
