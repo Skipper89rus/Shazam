@@ -30,7 +30,9 @@ if (needVisualise) % Выводим спектограмму на экран
     view(0, 90);
 end
 
-[peaks, freqIds, timeIds] = GetPeaks(power, shiftRectHalfSizeT, shiftRectHalfSizeF);
+shiftMaxStepT = 0;
+shiftMaxStepF = 0;
+[peaks, freqIds, timeIds] = GetPeaks(power, kHzFreq, shiftMaxStepT, shiftMaxStepF);
 P = power(sub2ind(size(power), freqIds, timeIds));
 T = time(timeIds);
 F = kHzFreq(freqIds);
