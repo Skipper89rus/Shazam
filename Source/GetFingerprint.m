@@ -30,23 +30,12 @@ if (needVisualise) % Выводим спектограмму на экран
     view(0, 90);
 end
 
-shiftMaxStepT = 0;
-shiftMaxStepF = 0;
-[peaks, freqIds, timeIds] = GetPeaks(power, kHzFreq, shiftMaxStepT, shiftMaxStepF);
-P = power(sub2ind(size(power), freqIds, timeIds));
-T = time(timeIds);
-F = kHzFreq(freqIds);
-
-if (needVisualise) % Выводим пики
-    hold on
-    scatter3(T, F, P, '*r');
-    hold off
-end
+[powerPeaksIds] = GetRectPeaks(power, kHzFreq, time, [], []);
 
 deltaTime = 35;
 deltaFreq = 30;
 fanout = 3; % Максимальное число пар на один пик
-tuples = GetTuples(power .* peaks, fanout, deltaTime, deltaFreq);
+tuples = GetTuples(power(powerPeaksIds), fanout, deltaTime, deltaFreq);
 
 if (needVisualise) % Выводим кортеж
     hold on

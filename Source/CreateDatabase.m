@@ -1,43 +1,39 @@
-% РЎРѕР·РґР°РЅРёРµ Р±Р°Р·С‹ РґР°РЅРЅС‹С…
+% Создание базы данных
 
-dirPath = '..\Data'; % РџСѓС‚СЊ Рє РјСѓР·.РєРѕРјРїРѕР·РёС†РёСЏРј
-supportedAudioExt = {'.mp3'; '.wav'}; % РЈРєР°Р·С‹РІР°РµРј РЅСѓР¶РЅС‹Рµ С„РѕСЂРјР°С‚С‹
-audioFiles = GetFilesWithExtensions(dirPath, supportedAudioExt); % РќР°С…РѕРґРёРј РёРјРµСЋС‰РёРµСЃСЏ С„Р°Р№Р»С‹
+dirPath = '..\Data'; % Путь к муз.композициям
+supportedAudioExt = {'.mp3'; '.wav'}; % Указываем нужные форматы
+audioFiles = GetFilesWithExtensions(dirPath, supportedAudioExt); % Находим имеющиеся файлы
 
 hashTableSize = 100000;
-global GHashTable % Р“Р»РѕР±Р°Р»СЊРЅР°СЏ РїРµСЂРµРјРµРЅРЅР°СЏ, РІ РєРѕС‚РѕСЂСѓСЋ Р±СѓРґСѓС‚ РґРѕР±Р°РІР»СЏС‚СЊСЃСЏ РєРѕРјРїРѕР·РёС†РёРё
+global GHashTable % Глобальная переменная, в которую будут добавляться композиции
 
 if ~exist('GSongsNum')
-    % Р—Р°РіСЂСѓР¶Р°РµРј Р±Р°Р·Сѓ, РµСЃР»Рё РѕРЅР° РµСЃС‚СЊ
+    % Загружаем базу, если она есть
     if exist('SongsNum.mat')
         load('SongsNum.mat');
         load('HashTable.mat');
     else  
-        % РЎРѕР·РґР°РµРј Р±Р°Р·Сѓ
+        % Создаем базу
         songsNum = cell(0);
         GHashTable = cell(hashTableSize, 2); % 
     end
 end
 
-for songIdx = 1 : size(audioFiles) % Р”РѕР±Р°РІР»СЏРµРј РјСѓР·.РєРѕРјРїРѕР·РёС†РёСЋ РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…
+for songIdx = 1 : size(audioFiles) % Добавляем муз.композицию в базу данных
     fprintf('Adding file \''%s\'' to the database...', audioFiles{songIdx});
 
     [audioData, sampleRate] = audioread(audioFiles{songIdx});
-    % fileLength = length(fileData);
-    % interval = [(fileLength * 2) / sampleRate,(fileLength * 2) / sampleRate];
-    % clear fileData sampleRate
-    % [fileData, sampleRate] = audioread(file, interval);
 
     needVisualise = 1;
-    tuples = GetFingerprint(audioData, sampleRate, needVisualise); % РџРѕР»СѓС‡Р°РµРј РєРѕСЂС‚РµР¶
-    maxCollisions = AddToTable(tuples, songIdx); % РЎС‡РёС‚Р°РµРј РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ С‡РёСЃР»Рѕ РїСЂРѕС‚РёРІРѕСЂРµС‡РёР№ (СЃС‚РѕР»РєРЅРѕРІРµРЅРёР№) РґР»СЏ Р·Р°РґР°РЅРЅРѕРіРѕ С…РµС€Р°
+    tuples = GetFingerprint(audioData, sampleRate, needVisualise); % Получаем кортеж
+    maxCollisions = AddToTable(tuples, songIdx); % Считаем максимальное число противоречий (столкновений) для заданного хеша
     
     fprintf(' done.\n');
 end
 
-global GSongsNum % РЎРѕР·РґР°РµРј РіР»РѕР±Р°Р»СЊРЅСѓСЋ РїРµСЂРµРјРµРЅРЅСѓСЋ РґР»СЏ РЅРѕРјРµСЂР° РїРµСЃРµРЅ
-GSongsNum = songIdx; % Р—Р°РїРёСЃС‹РІР°РµРј РЅРѕРјРµСЂ РїРµСЃРЅРё РІ СЃРѕР·РґР°РЅРЅСѓСЋ РїРµСЂРµРјРµРЅРЅСѓСЋ
-save('SongsNum.mat', 'GSongsNum'); % РЎРѕС…СЂР°РЅСЏРµРј РЅРµРѕР±С…РѕРґРёРјРѕРµ
+global GSongsNum % Создаем глобальную переменную для номера песен
+GSongsNum = songIdx; % Записываем номер песни в созданную переменную
+save('SongsNum.mat', 'GSongsNum'); % Сохраняем необходимое
 save('HashTable.mat', 'GHashTable');
 
 %player = audioplayer(fileData, sampleRate);
