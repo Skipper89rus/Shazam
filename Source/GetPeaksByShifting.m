@@ -25,7 +25,6 @@ for shiftF = -shiftMaxStepF : shiftMaxStepF
         peaksMask = (peaksMask & (power - shifted) > 0);
     end
 end
-
 end
 
 function ViewMatrix(matrix)
