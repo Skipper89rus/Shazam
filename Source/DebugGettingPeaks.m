@@ -10,11 +10,11 @@ GetSpectrogramOfAudioData(audioData, sampleRate, wnd, overlap, fftSize);
 
 %[myVoiceAudioData, sampleRate] = audioread('..\Data\MyVoice1.wav');
 %GetSpectrogramOfAudioData(myVoiceAudioData, sampleRate, wnd, overlap, fftSize);
-[S, kHzFreq, time, power] = GetSpectrogramOfAudioData(audioData, sampleRate, wnd, overlap, fftSize);
+[S, kHzFreq, time, logPower] = GetSpectrogramOfAudioData(audioData, sampleRate, wnd, overlap, fftSize);
 
-freqBound = [0, 12];
-timeBound = [0.5, 2.2];
-peaksIds = GetRectPeaks(power, kHzFreq, time, freqBound, timeBound);
+freqBound = [0, 16];
+timeBound = [5.5, 7];
+peaksIds = GetRectPeaks(logPower, kHzFreq, time, freqBound, timeBound);
 
 S(peaksIds) = 0;
 
@@ -25,9 +25,11 @@ GetSpectrogramOfAudioData(processedAudioData, sampleRate, wnd, overlap, fftSize)
 
 end
 
-function [S, kHzFreq, time, power] = GetSpectrogramOfAudioData(audioData, sampleRate, wnd, overlap, fftSize)
+function [S, kHzFreq, time, logPower] = GetSpectrogramOfAudioData(audioData, sampleRate, wnd, overlap, fftSize)
 
 [S, freq, time, power] = spectrogram(audioData, wnd, overlap, fftSize, sampleRate);
+% Сглаживаем фильтром Гаусса
+power = imgaussfilt(power);
 
 logPower = 10 * log10(power);
 kHzFreq = freq / 1000;
