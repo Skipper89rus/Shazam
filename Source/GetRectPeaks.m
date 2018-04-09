@@ -22,8 +22,8 @@ boundedTime = time(boundedTimeIds);
 % Поиск пиков
 shiftMaxStepF = 2;
 shiftMaxStepT = 0;
-[peaksMask] = GetPeaksByShifting(boundedPower, shiftMaxStepF, shiftMaxStepT);
-%[peaksMask] = GetPeaksSimple(boundedPower);
+%[peaksMask] = GetPeaksByShifting(boundedPower, shiftMaxStepF, shiftMaxStepT);
+[peaksMask] = GetPeaksSimple(boundedPower);
 %ShowPeaks(logPower, kHzFreq, time, peaksMask, boundedFreqIds(1), boundedTimeIds(1), '.g');
 
 % Частотные диапазоны для фильтрации

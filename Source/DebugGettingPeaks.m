@@ -5,15 +5,16 @@ wnd = hamming(wndSize);
 overlap = wndSize / 2;
 fftSize = max(256, 2 ^ nextpow2(wndSize));
 
-[audioData, sampleRate] = audioread('..\Data\Traffic + MyVoice1.wav');
+[audioData, sampleRate] = audioread('..\Data\Traffic (police siren + car beep).wav');
 GetSpectrogramOfAudioData(audioData, sampleRate, wnd, overlap, fftSize);
 
-%[myVoiceAudioData, sampleRate] = audioread('..\Data\MyVoice1.wav');
-%GetSpectrogramOfAudioData(myVoiceAudioData, sampleRate, wnd, overlap, fftSize);
+[audioData] = AddSampleFromFile(audioData, sampleRate, '..\Data\Car beep.mp3', 1);
+audiowrite('..\Data\Traffic (police siren + car beep).wav', audioData, sampleRate);
+
 [S, kHzFreq, time, logPower] = GetSpectrogramOfAudioData(audioData, sampleRate, wnd, overlap, fftSize);
 
-freqBound = [0, 16];
-timeBound = [5.5, 7];
+freqBound = [];
+timeBound = [];
 peaksIds = GetRectPeaks(logPower, kHzFreq, time, freqBound, timeBound);
 
 S(peaksIds) = 0;
