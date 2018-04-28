@@ -1,25 +1,58 @@
-function [powerPeaksIds] = GetRectPeaks(logPower, kHzFreq, time, freqBound, timeBound)
+function [powerPeaksIds] = GetRectPeaks(power, kHzFreq, time, freqBound, timeBound, timeStep, timeOverlap)
 %   GetRectPeaks Получить пики для выбранной области спектрограммы
 %       freqBound - границы частот (размер 2)
 %       timeBound - границы времени (размер 2)
 %       return powerPeaksIds - индексы пиков в power
 
-% Выделяем область
+logPower = 10 * log10(power);
+
+% Выделяем окно по частоте
 boundedFreqIds = 1:length(kHzFreq);
 if ~isempty(freqBound)
     boundedFreqIds = find( kHzFreq >= freqBound(1) & kHzFreq <= freqBound(2) );
 end
+boundedFreq = kHzFreq(boundedFreqIds);
 
 boundedTimeIds = 1:length(time);
 if ~isempty(timeBound)
     boundedTimeIds = find( time >= timeBound(1) & time <= timeBound(2) );
 end
 
-boundedPower = logPower(boundedFreqIds, boundedTimeIds);
-boundedFreq = kHzFreq(boundedFreqIds);
-boundedTime = time(boundedTimeIds);
+% Получаем плоскостность по переданному окну
+boundedPower = power(boundedFreqIds, boundedTimeIds);
+flatness = geomean(boundedPower) / mean(boundedPower);
+fprintf('flatness = %.6f\n', flatness);
 
-% Поиск пиков
+% Окно по времени выбираем в зависимости от смены flatness
+loBound = timeBound(1);
+hiBound = min(loBound + timeStep, timeBound(2));
+while hiBound < timeBound(2)
+    boundedTimeIds = find( time >= loBound & time <= hiBound );
+    
+    fprintf('loBound = %.2f; hiBound = %.2f', loBound, hiBound);
+    if IsFlatnessChanged( flatness, power(boundedFreqIds, boundedTimeIds) )
+        
+        powerPeaksIds = GetRectPeaksInternal(logPower, kHzFreq, time, logPower(boundedFreqIds, boundedTimeIds), boundedFreq, boundedFreqIds, boundedTimeIds);
+        loBound = hiBound - timeStep * timeOverlap;
+    end
+    hiBound = hiBound + timeStep * (1 - timeOverlap);
+end
+
+powerPeaksIds = GetRectPeaksInternal(logPower, kHzFreq, time, logPower(boundedFreqIds, boundedTimeIds), boundedFreq, boundedFreqIds, boundedTimeIds);
+end
+
+function result = IsFlatnessChanged(f, power)    
+    flatness = geomean(power) / mean(power);
+    fprintf('; flatness = %.6f\n', flatness);
+    result = flatness > f;
+end
+
+function [powerPeaksIds] = GetRectPeaksInternal(logPower, kHzFreq, time, boundedPower, boundedFreq, boundedFreqIds, boundedTimeIds)
+%   GetRectPeaks Получить пики для выбранной области спектрограммы
+%       freqBound - границы частот (размер 2)
+%       timeBound - границы времени (размер 2)
+%       return powerPeaksIds - индексы пиков в power
+
 shiftMaxStepF = 2;
 shiftMaxStepT = 0;
 %[peaksMask] = GetPeaksByShifting(boundedPower, shiftMaxStepF, shiftMaxStepT);
@@ -49,8 +82,8 @@ function [freqRangesThresholds] = CalcThresholdsForFreqRanges(boundedPower, boun
 
 freqRangesThresholds = zeros(1, length(freqRanges) - 1);
 for freqRangeIdx = 1 : length(freqRanges) - 1
-    a = freqRanges(freqRangeIdx) / 1000;
-    b = freqRanges(freqRangeIdx + 1) / 1000;
+    a = freqRanges(freqRangeIdx);
+    b = freqRanges(freqRangeIdx + 1);
     freqWnd = boundedPower(sub2ind(size(boundedFreq), find(boundedFreq >= a & boundedFreq < b)), :);
     if isempty(freqWnd)
         continue
@@ -67,8 +100,8 @@ function [peaksMask] = FilterPeaksByThresholds(boundedPower, boundedFreq, peaksM
 timeWndSize = size(boundedPower, 2);
 
 for freqRangeIdx = 1 : length(freqRanges) - 1    
-    a = freqRanges(freqRangeIdx) / 1000;
-    b = freqRanges(freqRangeIdx + 1) / 1000;
+    a = freqRanges(freqRangeIdx);
+    b = freqRanges(freqRangeIdx + 1);
     freqRangeIds = find(boundedFreq >= a & boundedFreq < b);
     if isempty(freqRangeIds)
         continue
@@ -78,7 +111,7 @@ for freqRangeIdx = 1 : length(freqRanges) - 1
     
     for freqIdx = 1 : length(freqRangeIds)
         for timeIdx = 1 : timeWndSize
-            fprintf('freqIdx = %d; timeIdx = %d; power = %.10f; threshold = %.10f\n', freqRangeIds(freqIdx), timeIdx, boundedPower(freqRangeIds(freqIdx), timeIdx), threshold);
+            %fprintf('freqIdx = %d; timeIdx = %d; power = %.10f; threshold = %.10f\n', freqRangeIds(freqIdx), timeIdx, boundedPower(freqRangeIds(freqIdx), timeIdx), threshold);
             if boundedPower(freqRangeIds(freqIdx), timeIdx) < threshold
                 peaksMask(freqRangeIds(freqIdx), timeIdx) = false;
             end
@@ -92,8 +125,8 @@ function [peaksMask] = FindPointsScattering(boundedPower, boundedFreq, peaksMask
 
 timeWndSize = size(boundedPower, 2);
 for freqRangeIdx = 1 : length(freqRanges) - 1    
-    a = freqRanges(freqRangeIdx) / 1000;
-    b = freqRanges(freqRangeIdx + 1) / 1000;
+    a = freqRanges(freqRangeIdx);
+    b = freqRanges(freqRangeIdx + 1);
     freqRangeIds = find(boundedFreq >= a & boundedFreq < b);
     if isempty(freqRangeIds)
         continue
@@ -121,8 +154,10 @@ function ShowPeaks(power, kHzFreq, time, peaksMask, freqIdxOffset, timeIdxOffset
 [freqIds, timeIds] = find(peaksMask);
 [freqIds, timeIds] = OffsetIndexes(freqIds, timeIds, freqIdxOffset, timeIdxOffset);
 
+freq = kHzFreq / 1000;
+
 P = power( sub2ind(size(power), freqIds, timeIds) );
-F = kHzFreq(freqIds);
+F = freq(freqIds);
 T = time(timeIds);
 
 hold on
