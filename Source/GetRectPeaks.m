@@ -26,9 +26,15 @@ fprintf('flatness = %.6f\n', flatness);
 peaksMask = true( size(boundedPower, 1), size(boundedPower, 2) );
 
 % Окно по времени выбираем в зависимости от смены flatness
-loBound = timeBound(1);
-hiBound = min(loBound + timeStep, timeBound(2));
-while hiBound < timeBound(2)
+loBound = 0;
+maxTime = min(loBound + timeStep, time(end));
+hiBound = maxTime;
+if ~isempty(timeBound) && length(timeBound) == 2
+    loBound = timeBound(1);
+    hiBound = min(loBound + timeStep, timeBound(2));
+end
+
+while hiBound < maxTime
     boundedTimeIds = find( time >= loBound & time <= hiBound );
     
     fprintf('loBound = %.2f; hiBound = %.2f', loBound, hiBound);
@@ -49,7 +55,7 @@ ShowPeaks(logPower, kHzFreq, time, curPeaksMask, boundedFreqIds(1), boundedTimeI
 
 [freqIds, timeIds] = find(peaksMask);
 [freqIds, timeIds] = OffsetIndexes( freqIds, timeIds, boundedFreqIds(1), boundedTimeIds(1) );
-powerPeaksIds = sub2ind(size(logPower), freqIds, timeIds);
+powerPeaksIds = sub2ind(size(power), freqIds, timeIds);
 end
 
 function result = IsFlatnessChanged(f, power)    
