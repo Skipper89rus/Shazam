@@ -1,4 +1,4 @@
-function [powerPeaksIds] = GetRectPeaks(power, kHzFreq, time, freqBound, timeBound, timeStep, timeOverlap)
+function [powerPeaksIds] = GetRectPeaks(power, kHzFreq, time, settings, visualize)
 %   GetRectPeaks Получить пики для выбранной области спектрограммы
 %       freqBound - границы частот (размер 2)
 %       timeBound - границы времени (размер 2)
@@ -8,60 +8,75 @@ logPower = 10 * log10(power);
 
 % Выделяем окно по частоте
 boundedFreqIds = 1:length(kHzFreq);
-if ~isempty(freqBound)
-    boundedFreqIds = find( kHzFreq >= freqBound(1) & kHzFreq <= freqBound(2) );
+if ~isempty(settings.freqBound)
+    boundedFreqIds = find( kHzFreq >= settings.freqBound(1) & kHzFreq <= settings.freqBound(2) );
 end
 boundedFreq = kHzFreq(boundedFreqIds);
 
 boundedTimeIds = 1:length(time);
-if ~isempty(timeBound)
-    boundedTimeIds = find( time >= timeBound(1) & time <= timeBound(2) );
+if ~isempty(settings.timeBound)
+    boundedTimeIds = find( time >= settings.timeBound(1) & time <= settings.timeBound(2) );
 end
 
 % Получаем плоскостность по переданному окну
 boundedPower = power(boundedFreqIds, boundedTimeIds);
-flatness = geomean(boundedPower) / mean(boundedPower);
-fprintf('flatness = %.6f\n', flatness);
 
 peaksMask = true( size(boundedPower, 1), size(boundedPower, 2) );
 
 % Окно по времени выбираем в зависимости от смены flatness
-loBound = 0;
-maxTime = min(loBound + timeStep, time(end));
-hiBound = maxTime;
-if ~isempty(timeBound) && length(timeBound) == 2
-    loBound = timeBound(1);
-    hiBound = min(loBound + timeStep, timeBound(2));
+timeStep = time(end) * settings.timeStepPercent;
+minTime = 0;
+loBound = minTime;
+maxTime = max(loBound + timeStep, time(end));
+hiBound = min(loBound + timeStep, time(end));
+if ~isempty(settings.timeBound) && length(settings.timeBound) == 2
+    loBound = settings.timeBound(1);
+    hiBound = min(loBound + timeStep, settings.timeBound(2));
+end
+
+if loBound == minTime
+    curBoundedTimeIds = find( time >= loBound & time <= hiBound );
+    curPowerWnd = power(boundedFreqIds, curBoundedTimeIds);
+    prevFlatness = geomean(curPowerWnd) / mean(curPowerWnd);
+    hiBound = hiBound + timeStep * (1 - settings.timeOverlapPercent);
 end
 
 while hiBound < maxTime
-    boundedTimeIds = find( time >= loBound & time <= hiBound );
-    
-    fprintf('loBound = %.2f; hiBound = %.2f', loBound, hiBound);
-    if IsFlatnessChanged( flatness, power(boundedFreqIds, boundedTimeIds) )
-        curPeaksMask = GetRectPeaksInternal(logPower(boundedFreqIds, boundedTimeIds), boundedFreq);
+    curBoundedTimeIds = find( time >= loBound & time <= hiBound );
+    curPowerWnd = power(boundedFreqIds, curBoundedTimeIds);
+
+    fprintf('loBound = %.2f; hiBound = %.2f; ', loBound, hiBound);
+    fprintf('prevFlatness = %.6f; ', prevFlatness);
+    curFlatness = geomean(curPowerWnd) / mean(curPowerWnd);
+    fprintf('curFlatness = %.6f; ', curFlatness);
+    flatnessRate = abs(1 - max(prevFlatness, curFlatness) / min(prevFlatness, curFlatness));
+    fprintf('flatnessRate = %.6f; ', flatnessRate);
+
+    if flatnessRate > 0.2
+        fprintf('flatness changed');
+        curPeaksMask = GetRectPeaksInternal(logPower(boundedFreqIds, curBoundedTimeIds), boundedFreq);
         % Пересекаем имеющиеся пики и полученные
-        peaksMask(boundedFreqIds, boundedTimeIds) = peaksMask(boundedFreqIds, boundedTimeIds) & curPeaksMask;
-        ShowPeaks(logPower, kHzFreq, time, curPeaksMask, boundedFreqIds(1), boundedTimeIds(1), '.r');
-        
-        loBound = hiBound - timeStep * timeOverlap;
+        peaksMask(boundedFreqIds, curBoundedTimeIds) = peaksMask(boundedFreqIds, curBoundedTimeIds) & curPeaksMask;
+        if visualize
+            ShowPeaks(logPower, kHzFreq, time, curPeaksMask, boundedFreqIds(1), curBoundedTimeIds(1), '.r');
+        end
+        loBound = hiBound - timeStep * settings.timeOverlapPercent;
+        prevFlatness = curFlatness;
     end
-    hiBound = hiBound + timeStep * (1 - timeOverlap);
+    fprintf('\n');
+    hiBound = hiBound + timeStep * (1 - settings.timeOverlapPercent);
 end
 
-curPeaksMask = GetRectPeaksInternal(logPower(boundedFreqIds, boundedTimeIds), boundedFreq);
-peaksMask(boundedFreqIds, boundedTimeIds) = peaksMask(boundedFreqIds, boundedTimeIds) & curPeaksMask;
-ShowPeaks(logPower, kHzFreq, time, curPeaksMask, boundedFreqIds(1), boundedTimeIds(1), '.r');
-
+curBoundedTimeIds = find( time >= loBound & time <= hiBound );
+curPowerWnd = power(boundedFreqIds, curBoundedTimeIds);
+curPeaksMask = GetRectPeaksInternal(curPowerWnd, boundedFreq);
+peaksMask(boundedFreqIds, curBoundedTimeIds) = peaksMask(boundedFreqIds, curBoundedTimeIds) & curPeaksMask;
+if visualize
+    ShowPeaks(logPower, kHzFreq, time, curPeaksMask, boundedFreqIds(1), curBoundedTimeIds(1), '.r');
+end
 [freqIds, timeIds] = find(peaksMask);
 [freqIds, timeIds] = OffsetIndexes( freqIds, timeIds, boundedFreqIds(1), boundedTimeIds(1) );
 powerPeaksIds = sub2ind(size(power), freqIds, timeIds);
-end
-
-function result = IsFlatnessChanged(f, power)    
-    flatness = geomean(power) / mean(power);
-    fprintf('; flatness = %.6f\n', flatness);
-    result = flatness > f;
 end
 
 function [peaksMask] = GetRectPeaksInternal(power, kHzFreq)
@@ -76,7 +91,9 @@ function [peaksMask] = GetRectPeaksInternal(power, kHzFreq)
 [peaksMask] = GetPeaksSimple(power);
 
 % Частотные диапазоны для фильтрации
-freqRanges = [20 40 60 80 100 150 200 400 600 800 1000 2000 4000 6000 8000 10000 12000 14000 16000 18000 19000 20000];
+% freqRanges = [20 40 60 80 100 150 200 400 600 800 1000 2000 4000 6000 8000 10000 12000 14000 16000 18000 19000 20000];
+freqRanges = [80 200 500 2500 5000 10000 16000 20000];
+
 % Для каждого диапазона пороговое значение
 [freqRangesThresholds] = CalcThresholdsForFreqRanges(power, kHzFreq, freqRanges);
 [peaksMask] = FilterPeaksByThresholds(power, kHzFreq, peaksMask, freqRanges, freqRangesThresholds);
