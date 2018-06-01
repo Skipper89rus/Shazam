@@ -1,4 +1,4 @@
-function [powerPeaksIds] = GetRectPeaks(power, kHzFreq, time, settings, visualize)
+function [peaksMask] = GetRectPeaks(power, kHzFreq, time, settings, visualize)
 %   GetRectPeaks Получить пики для выбранной области спектрограммы
 %       freqBound - границы частот (размер 2)
 %       timeBound - границы времени (размер 2)
@@ -34,6 +34,7 @@ if ~isempty(settings.timeBound) && length(settings.timeBound) == 2
     hiBound = min(loBound + timeStep, settings.timeBound(2));
 end
 
+prevFlatness = 0;
 if loBound == minTime
     curBoundedTimeIds = find( time >= loBound & time <= hiBound );
     curPowerWnd = power(boundedFreqIds, curBoundedTimeIds);
@@ -52,7 +53,7 @@ while hiBound < maxTime
     flatnessRate = abs(1 - max(prevFlatness, curFlatness) / min(prevFlatness, curFlatness));
     fprintf('flatnessRate = %.6f; ', flatnessRate);
 
-    if flatnessRate > 0.2
+    if flatnessRate > settings.flatnessChangeRate
         fprintf('flatness changed');
         curPeaksMask = GetRectPeaksInternal(logPower(boundedFreqIds, curBoundedTimeIds), boundedFreq);
         % Пересекаем имеющиеся пики и полученные
@@ -71,12 +72,11 @@ curBoundedTimeIds = find( time >= loBound & time <= hiBound );
 curPowerWnd = power(boundedFreqIds, curBoundedTimeIds);
 curPeaksMask = GetRectPeaksInternal(curPowerWnd, boundedFreq);
 peaksMask(boundedFreqIds, curBoundedTimeIds) = peaksMask(boundedFreqIds, curBoundedTimeIds) & curPeaksMask;
+
 if visualize
     ShowPeaks(logPower, kHzFreq, time, curPeaksMask, boundedFreqIds(1), curBoundedTimeIds(1), '.r');
 end
-[freqIds, timeIds] = find(peaksMask);
-[freqIds, timeIds] = OffsetIndexes( freqIds, timeIds, boundedFreqIds(1), boundedTimeIds(1) );
-powerPeaksIds = sub2ind(size(power), freqIds, timeIds);
+
 end
 
 function [peaksMask] = GetRectPeaksInternal(power, kHzFreq)
@@ -91,8 +91,8 @@ function [peaksMask] = GetRectPeaksInternal(power, kHzFreq)
 [peaksMask] = GetPeaksSimple(power);
 
 % Частотные диапазоны для фильтрации
-% freqRanges = [20 40 60 80 100 150 200 400 600 800 1000 2000 4000 6000 8000 10000 12000 14000 16000 18000 19000 20000];
-freqRanges = [80 200 500 2500 5000 10000 16000 20000];
+freqRanges = [20 40 60 80 100 150 200 400 600 800 1000 2000 4000 6000 8000 10000 12000 14000 16000 18000 19000 20000];
+%freqRanges = [200 500 2500 5000 16000 20000];
 
 % Для каждого диапазона пороговое значение
 [freqRangesThresholds] = CalcThresholdsForFreqRanges(power, kHzFreq, freqRanges);
@@ -173,26 +173,4 @@ for freqRangeIdx = 1 : length(freqRanges) - 1
         end
     end
 end
-end
-
-function ShowPeaks(power, kHzFreq, time, peaksMask, freqIdxOffset, timeIdxOffset, peakFormat)
-
-[freqIds, timeIds] = find(peaksMask);
-[freqIds, timeIds] = OffsetIndexes(freqIds, timeIds, freqIdxOffset, timeIdxOffset);
-
-freq = kHzFreq / 1000;
-
-P = power( sub2ind(size(power), freqIds, timeIds) );
-F = freq(freqIds);
-T = time(timeIds);
-
-hold on
-scatter3(T, F, P, peakFormat);
-hold off
-
-end
-
-function [freqOffsetedIds, timeOffsetedIds] = OffsetIndexes(freqIds, timeIds, freqIdxOffset, timeIdxOffset)
-freqOffsetedIds = freqIds + freqIdxOffset - 1;
-timeOffsetedIds = timeIds + timeIdxOffset - 1;
 end
